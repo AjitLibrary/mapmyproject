@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Connemara Public Library",
+    "district": "Chennai",
+    "year": 1896,
+    "lat": 13.0722,
+    "lon": 80.2642
+  },
+  {
+    "name": "IIT Madras Library",
+    "district": "Chennai",
+    "year": 1959,
+    "lat": 12.9916,
+    "lon": 80.2337
+  },
+  {
+    "name": "Anna Centenary Library",
+    "district": "Chennai",
+    "year": 2010,
+    "lat": 13.0067,
+    "lon": 80.2206
+  },
+  {
+    "name": "District Central Library",
+    "district": "Coimbatore",
+    "year": 1970,
+    "lat": 11.0168,
+    "lon": 76.9558
+  }
+]

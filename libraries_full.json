@@ -7,11 +7,32 @@
     "lon": 80.2642
   },
   {
-    "name": "IIT Madras Library",
-    "district": "Chennai",
-    "year": 1959,
-    "lat": 12.9916,
-    "lon": 80.2337
+    "name": "State Central Library",
+    "district": "Hyderabad",
+    "year": 1891,
+    "lat": 17.3850,
+    "lon": 78.4867
+  },
+  {
+    "name": "Asiatic Society Library",
+    "district": "Mumbai",
+    "year": 1804,
+    "lat": 18.9322,
+    "lon": 72.8347
+  },
+  {
+    "name": "National Library of India",
+    "district": "Kolkata",
+    "year": 1836,
+    "lat": 22.5448,
+    "lon": 88.3426
+  },
+  {
+    "name": "Delhi Public Library",
+    "district": "Delhi",
+    "year": 1951,
+    "lat": 28.6139,
+    "lon": 77.2090
   },
   {
     "name": "Anna Centenary Library",
@@ -21,10 +42,101 @@
     "lon": 80.2206
   },
   {
-    "name": "District Central Library",
-    "district": "Coimbatore",
-    "year": 1970,
-    "lat": 11.0168,
-    "lon": 76.9558
+    "name": "Khuda Bakhsh Library",
+    "district": "Patna",
+    "year": 1891,
+    "lat": 25.5941,
+    "lon": 85.1376
+  },
+  {
+    "name": "Rampur Raza Library",
+    "district": "Rampur",
+    "year": 1774,
+    "lat": 28.8153,
+    "lon": 79.0250
+  },
+  {
+    "name": "Saraswathi Mahal Library",
+    "district": "Thanjavur",
+    "year": 1700,
+    "lat": 10.7870,
+    "lon": 79.1378
+  },
+  {
+    "name": "Central Library Baroda",
+    "district": "Vadodara",
+    "year": 1910,
+    "lat": 22.3072,
+    "lon": 73.1812
+  },
+  {
+    "name": "Trivandrum Public Library",
+    "district": "Thiruvananthapuram",
+    "year": 1829,
+    "lat": 8.5241,
+    "lon": 76.9366
+  },
+  {
+    "name": "Goa State Central Library",
+    "district": "Panaji",
+    "year": 1832,
+    "lat": 15.4909,
+    "lon": 73.8278
+  },
+  {
+    "name": "State Library Odisha",
+    "district": "Bhubaneswar",
+    "year": 1959,
+    "lat": 20.2961,
+    "lon": 85.8245
+  },
+  {
+    "name": "Punjab Public Library",
+    "district": "Amritsar",
+    "year": 1906,
+    "lat": 31.6340,
+    "lon": 74.8723
+  },
+  {
+    "name": "Rajasthan State Library",
+    "district": "Jaipur",
+    "year": 1955,
+    "lat": 26.9124,
+    "lon": 75.7873
+  },
+  {
+    "name": "Mysore Public Library",
+    "district": "Mysuru",
+    "year": 1915,
+    "lat": 12.2958,
+    "lon": 76.6394
+  },
+  {
+    "name": "Bangalore Central Library",
+    "district": "Bengaluru",
+    "year": 1915,
+    "lat": 12.9716,
+    "lon": 77.5946
+  },
+  {
+    "name": "Lucknow Public Library",
+    "district": "Lucknow",
+    "year": 1868,
+    "lat": 26.8467,
+    "lon": 80.9462
+  },
+  {
+    "name": "Allahabad Public Library",
+    "district": "Prayagraj",
+    "year": 1864,
+    "lat": 25.4358,
+    "lon": 81.8463
+  },
+  {
+    "name": "Nagpur Central Library",
+    "district": "Nagpur",
+    "year": 1925,
+    "lat": 21.1458,
+    "lon": 79.0882
   }
 ]

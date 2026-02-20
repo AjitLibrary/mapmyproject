@@ -125,6 +125,7 @@ var stateFiles = {
   "Tripura": "Tripura.geojson",
   "Uttar Pradesh": "UttarPradesh.geojson",
   "Uttarakhand": "Uttarakhand.geojson",
+  "West Bengal": "WestBengal.geojson"
   "Andaman and Nicobar Islands": "Andaman.geojson",
   "Chandigarh": "Chandigarh.geojson",
   "Dadra and Nagar Haveli and Daman and Diu": "Dadra.geojson",
@@ -157,7 +158,7 @@ function loadIndia(){
   map.setView(indiaView.center, indiaView.zoom);
   document.getElementById("breadcrumb").innerText="India";
 
-  fetch('india_state.geojson')
+  fetch('india_states.geojson')
   .then(res=>res.json())
   .then(json=>{
 

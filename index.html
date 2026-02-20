@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Library GIS with Timeline</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css"/>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body { margin:0; font-family: Arial; display:flex; background:#f5f7fa; }
+
+    #sidebar {
+      width:300px;
+      padding:15px;
+      background:#fff;
+      box-shadow:2px 0 10px rgba(0,0,0,0.05);
+    }
+
+    #map { flex:1; height:100vh; }
+
+    #breadcrumb, #legend {
+      position:absolute;
+      background:#fff;
+      padding:10px;
+      border-radius:8px;
+      box-shadow:0 2px 8px rgba(0,0,0,0.2);
+      z-index:1000;
+    }
+
+    #breadcrumb { top:10px; left:320px; }
+    #legend { bottom:20px; right:20px; }
+
+    input, select {
+      width:100%;
+      margin-bottom:10px;
+      padding:6px;
+    }
+
+    #timelineBox {
+      position:absolute;
+      bottom:20px;
+      left:320px;
+      background:white;
+      padding:10px;
+      border-radius:10px;
+      box-shadow:0 2px 8px rgba(0,0,0,0.2);
+      z-index:1000;
+    }
+  </style>
+</head>
+
+<body>
+
+<div id="sidebar">
+  <h2>Dashboard</h2>
+
+  <input type="text" id="searchBox" placeholder="Search library...">
+
+  <select id="districtFilter">
+    <option value="all">All</option>
+  </select>
+
+  <p>Total: <span id="count">0</span></p>
+
+  <button onclick="loadIndia()">⬅ Back to India</button>
+</div>
+
+<div id="breadcrumb">India</div>
+<div id="map"></div>
+
+<div id="legend"></div>
+
+<!-- TIMELINE -->
+<div id="timelineBox">
+  <input type="range" id="yearRange" min="1800" max="2025" value="2025">
+  <p>Year: <span id="yearValue">2025</span></p>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+
+<script>
+var map = L.map('map').setView([22.5,80],5);
+
+var indiaView = { center:[22.5,80], zoom:5 };
+
+L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png').addTo(map);
+
+var cluster = L.markerClusterGroup();
+map.addLayer(cluster);
+
+var geoLayer;
+var data=[];
+
+// STATE FILES
+var stateFiles = {
+  "Tamil Nadu": "TamilNadu.geojson",
+  "Karnataka": "Karnataka.geojson",
+  "Maharashtra": "Maharashtra.geojson"
+};
+
+// LOAD DATA
+fetch('libraries_full.json')
+.then(res=>res.json())
+.then(d=>{
+  data=d;
+  populateDistrictFilter();
+  updateMap();
+});
+
+// DISTRICT NAME
+function getDistrictName(feature){
+  return feature.properties.NAME_2 || feature.properties.name || "Unknown";
+}
+
+// STATE MAP
+function loadIndia(){
+
+  if(geoLayer) map.removeLayer(geoLayer);
+
+  map.setView(indiaView.center, indiaView.zoom);
+  document.getElementById("breadcrumb").innerText="India";
+
+  fetch('india_state.geojson')
+  .then(res=>res.json())
+  .then(json=>{
+
+    geoLayer=L.geoJSON(json,{
+      style:{ fillColor:'#3182bd', color:'#fff', weight:1, fillOpacity:0.5 },
+
+      onEachFeature:function(feature,layer){
+        var name=feature.properties.ST_NM || feature.properties.NAME_1;
+
+        layer.on({
+          click:function(){
+            document.getElementById("breadcrumb").innerText="India > "+name;
+
+            var file=stateFiles[name];
+            if(file){ loadDistrict(file); }
+          }
+        });
+      }
+
+    }).addTo(map);
+  });
+}
+
+// DISTRICT MAP
+function loadDistrict(file){
+
+  if(geoLayer) map.removeLayer(geoLayer);
+
+  fetch(file)
+  .then(res=>res.json())
+  .then(json=>{
+
+    geoLayer=L.geoJSON(json,{
+      style:{ color:'#333', weight:1, fillColor:'#c6dbef', fillOpacity:0.7 },
+
+      onEachFeature:function(feature,layer){
+
+        var name=getDistrictName(feature);
+
+        layer.on({
+          click:function(){
+            document.getElementById("breadcrumb").innerText+=" > "+name;
+
+            var filtered=data.filter(d=>d.district===name);
+            showMarkers(filtered);
+          }
+        });
+      }
+
+    }).addTo(map);
+
+    map.flyToBounds(geoLayer.getBounds());
+  });
+}
+
+// MARKERS WITH TIMELINE
+function showMarkers(filtered){
+
+  cluster.clearLayers();
+
+  var year=document.getElementById("yearRange").value;
+
+  filtered
+  .filter(lib=>lib.year<=year)
+  .forEach(lib=>{
+    var marker=L.marker([lib.lat,lib.lon])
+      .bindPopup("<b>"+lib.name+"</b><br>"+lib.year);
+
+    cluster.addLayer(marker);
+  });
+
+  document.getElementById("count").innerText=filtered.length;
+}
+
+// MAIN UPDATE
+function updateMap(){
+  showMarkers(data);
+}
+
+// SEARCH
+document.getElementById("searchBox").addEventListener("input",function(){
+  var val=this.value.toLowerCase();
+
+  var filtered=data.filter(lib=>lib.name.toLowerCase().includes(val));
+  showMarkers(filtered);
+});
+
+// DROPDOWN
+function populateDistrictFilter(){
+  var districts=[...new Set(data.map(d=>d.district))];
+  var select=document.getElementById("districtFilter");
+
+  districts.forEach(d=>{
+    var opt=document.createElement("option");
+    opt.value=d;
+    opt.text=d;
+    select.appendChild(opt);
+  });
+}
+
+// TIMELINE EVENT
+document.getElementById("yearRange").addEventListener("input",function(){
+  document.getElementById("yearValue").innerText=this.value;
+  updateMap();
+});
+
+// INIT
+loadIndia();
+
+</script>
+
+</body>
+</html>

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>National Library GIS Dashboard</title>
+  <title>Library GIS with Timeline</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -22,54 +22,33 @@
 
     #map { flex:1; height:100vh; }
 
+    #breadcrumb, #legend {
+      position:absolute;
+      background:#fff;
+      padding:10px;
+      border-radius:8px;
+      box-shadow:0 2px 8px rgba(0,0,0,0.2);
+      z-index:1000;
+    }
+
+    #breadcrumb { top:10px; left:320px; }
+    #legend { bottom:20px; right:20px; }
+
     input, select {
       width:100%;
       margin-bottom:10px;
       padding:6px;
     }
 
-    #breadcrumb, #legend, #timelineBox, #topbar {
+    #timelineBox {
       position:absolute;
+      bottom:20px;
+      left:320px;
       background:white;
       padding:10px;
       border-radius:10px;
       box-shadow:0 2px 8px rgba(0,0,0,0.2);
       z-index:1000;
-    }
-
-    #breadcrumb { top:10px; left:320px; }
-    #timelineBox { bottom:20px; left:320px; }
-    #legend { bottom:20px; right:20px; }
-
-    #topbar {
-      top:10px;
-      left:500px;
-      display:flex;
-      gap:10px;
-    }
-
-    .card {
-      padding:10px;
-      background:#fff;
-      border-radius:10px;
-      box-shadow:0 2px 6px rgba(0,0,0,0.1);
-      font-size:14px;
-    }
-
-    #loader {
-      position:absolute;
-      top:50%;
-      left:50%;
-      transform:translate(-50%,-50%);
-      background:white;
-      padding:20px;
-      display:none;
-      z-index:2000;
-    }
-
-    @media(max-width:768px){
-      body { flex-direction:column; }
-      #sidebar { width:100%; }
     }
   </style>
 </head>
@@ -81,137 +60,213 @@
 
   <input type="text" id="searchBox" placeholder="Search library...">
 
-  <select id="stateFilter"><option value="all">All States</option></select>
-  <select id="districtFilter"><option value="all">All Districts</option></select>
+  <select id="districtFilter">
+    <option value="all">All</option>
+  </select>
 
   <p>Total: <span id="count">0</span></p>
 
-  <button onclick="loadIndia()">⬅ Back</button>
+  <button onclick="loadIndia()">⬅ Back to India</button>
 </div>
 
 <div id="breadcrumb">India</div>
-
-<div id="topbar">
-  <div class="card">Total<br><b id="totalLib">0</b></div>
-  <div class="card">States<br><b id="totalStates">0</b></div>
-  <div class="card">Year<br><b id="yearKPI">2025</b></div>
-</div>
-
 <div id="map"></div>
 
+<div id="legend"></div>
+
+<!-- TIMELINE -->
 <div id="timelineBox">
   <input type="range" id="yearRange" min="1800" max="2025" value="2025">
   <p>Year: <span id="yearValue">2025</span></p>
 </div>
-
-<div id="legend"></div>
-<div id="loader">Loading...</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
 
 <script>
 var map = L.map('map').setView([22.5,80],5);
+
+var indiaView = { center:[22.5,80], zoom:5 };
+
 L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png').addTo(map);
 
 var cluster = L.markerClusterGroup();
 map.addLayer(cluster);
 
+var geoLayer;
 var data=[];
+
+// STATE FILES
+var stateFiles = {
+  "Andhra Pradesh": "AndhraPradesh.geojson",
+  "Arunachal Pradesh": "Arunachal.geojson",
+  "Assam": "Assam.geojson",
+  "Bihar": "Bihar.geojson",
+  "Chhattisgarh": "Chhattisgarh.geojson",
+  "Goa": "Goa.geojson",
+  "Gujarat": "Gujarat.geojson",
+  "Haryana": "Haryana.geojson",
+  "Himachal Pradesh": "Himachal.geojson",
+  "Jharkhand": "Jharkhand.geojson",
+  "Karnataka": "Karnataka.geojson",
+  "Kerala": "Kerala.geojson",
+  "Madhya Pradesh": "MadhyaPradesh.geojson",
+  "Maharashtra": "Maharashtra.geojson",
+  "Manipur": "Manipur.geojson",
+  "Meghalaya": "Meghalaya.geojson",
+  "Mizoram": "Mizoram.geojson",
+  "Nagaland": "Nagaland.geojson",
+  "Odisha": "Odisha.geojson",
+  "Punjab": "Punjab.geojson",
+  "Rajasthan": "Rajasthan.geojson",
+  "Sikkim": "Sikkim.geojson",
+  "Tamil Nadu": "TamilNadu.geojson",
+  "Telangana": "Telangana.geojson",
+  "Tripura": "Tripura.geojson",
+  "Uttar Pradesh": "UttarPradesh.geojson",
+  "Uttarakhand": "Uttarakhand.geojson",
+  "Andaman and Nicobar Islands": "Andaman.geojson",
+  "Chandigarh": "Chandigarh.geojson",
+  "Dadra and Nagar Haveli and Daman and Diu": "Dadra.geojson",
+  "Delhi": "Delhi.geojson",
+  "Jammu and Kashmir": "JammuAndKashmir.geojson",
+  "Ladakh": "ladakh.geojson",
+  "Lakshadweep": "Lakshadweep.geojson",
+  "Puducherry": "Puducherry.geojson"
+};
 
 // LOAD DATA
 fetch('libraries_full.json')
 .then(res=>res.json())
 .then(d=>{
   data=d;
-  populateFilters();
+  populateDistrictFilter();
   updateMap();
 });
 
-// FILTERS
-function populateFilters(){
-  let states=[...new Set(data.map(d=>d.state))];
-  let districts=[...new Set(data.map(d=>d.district))];
+// DISTRICT NAME
+function getDistrictName(feature){
+  return feature.properties.NAME_2 || feature.properties.name || "Unknown";
+}
 
-  states.forEach(s=>{
-    stateFilter.innerHTML+=`<option>${s}</option>`;
-  });
+// STATE MAP
+function loadIndia(){
 
-  districts.forEach(d=>{
-    districtFilter.innerHTML+=`<option>${d}</option>`;
+  if(geoLayer) map.removeLayer(geoLayer);
+
+  map.setView(indiaView.center, indiaView.zoom);
+  document.getElementById("breadcrumb").innerText="India";
+
+  fetch('india_state.geojson')
+  .then(res=>res.json())
+  .then(json=>{
+
+    geoLayer=L.geoJSON(json,{
+      style:{ fillColor:'#3182bd', color:'#fff', weight:1, fillOpacity:0.5 },
+
+      onEachFeature:function(feature,layer){
+        var name=feature.properties.ST_NM || feature.properties.NAME_1;
+
+        layer.on({
+          click:function(){
+            document.getElementById("breadcrumb").innerText="India > "+name;
+
+            var file=stateFiles[name];
+            if(file){ loadDistrict(file); }
+          }
+        });
+      }
+
+    }).addTo(map);
   });
 }
 
-// MARKERS
+// DISTRICT MAP
+function loadDistrict(file){
+
+  if(geoLayer) map.removeLayer(geoLayer);
+
+  fetch(file)
+  .then(res=>res.json())
+  .then(json=>{
+
+    geoLayer=L.geoJSON(json,{
+      style:{ color:'#333', weight:1, fillColor:'#c6dbef', fillOpacity:0.7 },
+
+      onEachFeature:function(feature,layer){
+
+        var name=getDistrictName(feature);
+
+        layer.on({
+          click:function(){
+            document.getElementById("breadcrumb").innerText+=" > "+name;
+
+            var filtered=data.filter(d=>d.district===name);
+            showMarkers(filtered);
+          }
+        });
+      }
+
+    }).addTo(map);
+
+    map.flyToBounds(geoLayer.getBounds());
+  });
+}
+
+// MARKERS WITH TIMELINE
 function showMarkers(filtered){
+
   cluster.clearLayers();
 
-  let year=yearRange.value;
+  var year=document.getElementById("yearRange").value;
 
-  let final=filtered.filter(d=>d.year<=year);
+  filtered
+  .filter(lib=>lib.year<=year)
+  .forEach(lib=>{
+    var marker=L.marker([lib.lat,lib.lon])
+      .bindPopup("<b>"+lib.name+"</b><br>"+lib.year);
 
-  final.forEach(lib=>{
-    let marker=L.marker([lib.lat,lib.lon])
-    .bindPopup(`
-      <b>${lib.name}</b><br>
-      ${lib.district}<br>
-      Year: ${lib.year}
-    `);
     cluster.addLayer(marker);
   });
 
-  count.innerText=final.length;
-
-  // KPI
-  totalLib.innerText=final.length;
-  totalStates.innerText=[...new Set(final.map(d=>d.state))].length;
-  yearKPI.innerText=year;
+  document.getElementById("count").innerText=filtered.length;
 }
 
 // MAIN UPDATE
 function updateMap(){
-
-  let state=stateFilter.value;
-  let district=districtFilter.value;
-
-  let filtered=data.filter(d=>{
-    return (state==="all"||d.state===state) &&
-           (district==="all"||d.district===district);
-  });
-
-  showMarkers(filtered);
+  showMarkers(data);
 }
 
 // SEARCH
-searchBox.addEventListener("input",function(){
-  let val=this.value.toLowerCase();
-  let filtered=data.filter(d=>d.name.toLowerCase().includes(val));
+document.getElementById("searchBox").addEventListener("input",function(){
+  var val=this.value.toLowerCase();
+
+  var filtered=data.filter(lib=>lib.name.toLowerCase().includes(val));
   showMarkers(filtered);
 });
 
-// EVENTS
-stateFilter.onchange=updateMap;
-districtFilter.onchange=updateMap;
+// DROPDOWN
+function populateDistrictFilter(){
+  var districts=[...new Set(data.map(d=>d.district))];
+  var select=document.getElementById("districtFilter");
 
-yearRange.oninput=function(){
-  yearValue.innerText=this.value;
-  updateMap();
-};
-
-// LEGEND
-legend.innerHTML = `
-<b>Library Density</b><br>
-<div style="height:10px;background:linear-gradient(to right,#c6dbef,#084594)"></div>
-Low → High
-`;
-
-// INIT
-function loadIndia(){
-  map.setView([22.5,80],5);
-  breadcrumb.innerText="India";
+  districts.forEach(d=>{
+    var opt=document.createElement("option");
+    opt.value=d;
+    opt.text=d;
+    select.appendChild(opt);
+  });
 }
 
+// TIMELINE EVENT
+document.getElementById("yearRange").addEventListener("input",function(){
+  document.getElementById("yearValue").innerText=this.value;
+  updateMap();
+});
+
+// INIT
 loadIndia();
+
 </script>
 
 </body>

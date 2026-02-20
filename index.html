@@ -157,7 +157,7 @@ function loadIndia(){
   map.setView(indiaView.center, indiaView.zoom);
   document.getElementById("breadcrumb").innerText="India";
 
-  fetch('india_state.geojson')
+  fetch('india_states.geojson')
   .then(res=>res.json())
   .then(json=>{
 
